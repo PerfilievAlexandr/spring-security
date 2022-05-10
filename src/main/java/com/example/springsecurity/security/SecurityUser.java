@@ -1,12 +1,14 @@
-package com.example.springsecurity.auth;
+package com.example.springsecurity.security;
 
+import com.example.springsecurity.model.user.Status;
+import com.example.springsecurity.model.user.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Set;
 
-public class ApplicationUser implements UserDetails {
+public class SecurityUser implements UserDetails {
     private final Set<? extends GrantedAuthority> grantedAuthorities;
     private final String password;
     private final String username;
@@ -15,7 +17,7 @@ public class ApplicationUser implements UserDetails {
     private final boolean isCredentialsNonExpired;
     private final boolean isEnabled;
 
-    public ApplicationUser(
+    public SecurityUser(
             String username,
             String password,
             Set<? extends GrantedAuthority> grantedAuthorities,
@@ -66,5 +68,17 @@ public class ApplicationUser implements UserDetails {
     @Override
     public boolean isEnabled() {
         return isEnabled;
+    }
+
+    public static UserDetails constructFromUserDbToUserDetails(User user) {
+        return new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword(),
+                user.getStatus().equals(Status.ACTIVE),
+                user.getStatus().equals(Status.ACTIVE),
+                user.getStatus().equals(Status.ACTIVE),
+                user.getStatus().equals(Status.ACTIVE),
+                user.getRole().getSimpleGrantedAuthorities()
+        );
     }
 }

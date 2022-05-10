@@ -1,6 +1,7 @@
-package com.example.springsecurity.security;
+package com.example.springsecurity.config;
 
-import com.example.springsecurity.auth.ApplicationUserService;
+import com.example.springsecurity.security.SecurityUserRoles;
+import com.example.springsecurity.security.SecurityUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,18 +12,19 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final PasswordEncoder passwordEncoder;
-    private final ApplicationUserService applicationUserService;
+    private final SecurityUserService applicationUserService;
 
     @Autowired
-    public ApplicationSecurityConfig(
+    public SecurityConfig(
             PasswordEncoder passwordEncoder,
-            ApplicationUserService applicationUserService
+            SecurityUserService applicationUserService
     ) {
         this.passwordEncoder = passwordEncoder;
         this.applicationUserService = applicationUserService;
@@ -31,16 +33,10 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-//                .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-//                .and()
                 .csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/", "index,", "/css/*", "/js/*").permitAll()
-                .antMatchers("/api/**").hasRole(ApplicationUserRoles.STUDENT.name())
-//                .antMatchers(HttpMethod.DELETE, "/manager/api/v1/students").hasAuthority(ApplicationUserPermissions.COURSE_WRITE.getPermission())
-//                .antMatchers(HttpMethod.POST, "/manager/api/v1/students").hasAuthority(ApplicationUserPermissions.COURSE_WRITE.getPermission())
-//                .antMatchers(HttpMethod.PUT, "/manager/api/v1/students").hasAuthority(ApplicationUserPermissions.COURSE_WRITE.getPermission())
-//                .antMatchers(HttpMethod.GET, "/manager/api/v1/students").hasAnyRole(ApplicationUserRoles.ADMIN.name(), ApplicationUserRoles.ADMIN_TRAINEE.name())
+//                .antMatchers("/api/**").hasRole(SecurityUserRoles.STUDENT.name())
                 .anyRequest()
                 .authenticated()
                 .and()
@@ -49,18 +45,17 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                     .permitAll()
                     .defaultSuccessUrl("/courses", true)
                     .passwordParameter("password")
-                    .usernameParameter("username")
+                    .usernameParameter("email")
                 .and()
                 .rememberMe()
                     .rememberMeParameter("remember-me")
                 .and()
                 .logout()
-                    .logoutUrl("/logout")
+                    .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
                     .clearAuthentication(true)
                     .invalidateHttpSession(true)
                     .deleteCookies("JSESSIONID", "remember-me")
                     .logoutSuccessUrl("/login");
-
     }
 
     @Override
